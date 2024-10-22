@@ -262,7 +262,8 @@ Collections, analogous to tables in relational databases, offer a solution by al
   - Support automatic document deletion with a Time-to-Live (TTL) feature, similar to capped collections.
   - Ideal for applications like monitoring or sensor data, with built-in data optimization for queries.
 
-#### Development with MongoDB and Python
+### Development with MongoDB
+#### MongoDB and Python
 This section provides guidance on developing applications with MongoDB, focusing on using **Python** and **PyMongo** to interact with MongoDB databases. The same examples can be applied to other languages like JavaScript, PHP, or Go.
 
 1. **PyMongo Installation**
