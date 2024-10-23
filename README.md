@@ -320,3 +320,108 @@ This section introduces developing applications with **MongoDB** using **Node.js
 6. **Experimentation and Exploration**
 - Review and modify the Node.js examples in the code space.
 - If you're familiar with JavaScript, use this as a starting point to build custom MongoDB applications with Node.js.
+
+### Server-side Administration with MongoDB
+#### Server-side Administration with MongoDB
+
+This section covers **server-side administration** of MongoDB, focusing on configuring MongoDB using **config files** for easier and more secure management of startup options.
+
+1. **MongoDB Config Files**
+- MongoDB configurations can be set via command-line options (e.g., `--dbpath`), but using **YAML configuration files** is more convenient and scalable.
+- These config files allow for a wide range of settings, such as specifying the **data file location**, **log file management**, **network configurations**, and **security settings**.
+
+2. **Example Config Files**
+- The provided config files (`mongo-deep.conf` and `sample.conf`) demonstrate different setup options:
+  - **Log file management**: Prevents log overflow by appending logs and specifying log file locations.
+  - **Storage settings**: Configures the database path, eliminating the need for `--dbpath`.
+  - **Network settings**: Controls bind IP, port, and other network-related options important for securing the database.
+
+3. **Advanced Configuration Options**
+- Advanced options in `sample.conf` include:
+  - **Separating logs and databases** on different physical disks for better performance.
+  - **Directory per database**: Organizes data files for each database in its directory.
+  - **Process management**: Configures MongoDB to run in the background (forking), useful for production environments.
+  - **Security settings**: Enables role-based authorization for enhanced security.
+  - **Replication settings**: Configures the replica set name, which is essential for setting up replication.
+
+4. **Using Config Files**
+- To start MongoDB with a configuration file, use the `--config` option:
+  ```bash
+  mongod --config /path/to/config-file.conf
+  ```
+- On Windows, config files may use a three-letter extension like `.yaml`.
+
+#### Replication
+
+In production environments, using a standalone MongoDB instance is risky due to potential server crashes or downtime. To mitigate these risks, **replica sets** are recommended. A **replica set** consists of multiple database instances (nodes) that replicate data from a **primary node** to several **secondary nodes**. If the primary fails, one of the secondaries automatically takes over.
+
+1. **Replica Set Setup**
+- Replica sets involve a primary node and secondary nodes to ensure data redundancy and high availability.
+- For demonstration, a replica set with three members is configured in Docker on a single host, each running on a different port. In production, the nodes should be distributed across different servers.
+
+2. **Initiating and Configuring Replica Sets**
+- Create directories for each replica member's data files and start MongoDB instances in separate terminals.
+- Log into the primary node and configure the replica set using `rs.initiate()` with member details.
+- Use `rs.status()` and `db.isMaster()` to check the replica set status and verify replication.
+
+3. **Connecting to a Replica Set**
+- When connecting to a replica set, use a connection string that specifies all members and the replica set name to ensure automatic connection to the primary node.
+
+4. **Replication in MongoDB**
+- Any changes made on the primary node automatically propagate to the secondary nodes, providing data redundancy and minimizing downtime.
+
+#### Sharding
+
+**Sharding** in MongoDB is a method for distributing data across multiple servers to improve performance and scalability. Instead of relying on increasingly larger servers as data grows, sharding enables **scaling out** by partitioning data across multiple servers.
+
+1. **Sharding vs. Scaling Up**
+- Traditional scaling involves using larger servers ("scale up"), while sharding allows distributing the data across many servers ("scale out"), providing flexibility and resource optimization.
+- MongoDB automates sharding, reducing the complexity compared to manual partitioning in other databases.
+
+2. **MongoDB Cluster and MongoS**
+- A **MongoDB cluster** is the setup of servers in a sharded environment. Unlike replica sets that replicate data across all nodes, **sharding splits data** among servers.
+- **MongoS** acts as a router, determining where data resides and fetching it from the correct shard based on a **shard key**.
+- **Config servers** (preferably in a replica set) manage data locations, while other replica sets store the data itself.
+
+3. **Shard Keys and Data Distribution**
+- A **shard key** is a field that determines how data is partitioned across shards, and it must be indexed.
+- MongoDB automatically adjusts the data distribution as it grows, balancing shards dynamically to prevent overload.
+
+4. **Application Transparency**
+- Sharding is transparent to the application, meaning the application connects to MongoS, and MongoDB handles routing and merging of data without requiring special handling or code changes.
+
+#### Authentication and Authorization
+
+Securing MongoDB requires implementing **authentication** and **authorization**. While network security measures like firewalls are helpful, it is crucial to enforce **role-based access control** to manage user privileges.
+
+1. **Authentication**
+- **Authentication** verifies a user's identity using usernames, passwords, or keys, similar to logging into an account.
+- By default, MongoDB has no authentication enabled. You must set up user accounts to secure access.
+- To set up, log into the MongoDB shell without access control, use the **admin database**, and create users with specified roles (e.g., read, write).
+  
+2. **Authorization**
+- **Authorization** defines what authenticated users can do, assigning **roles** and **permissions**.
+- MongoDB uses **role-based access control** (RBAC) to grant precise permissions, such as read-only access or administrative tasks.
+- Roles can be customized further by restricting access to specific databases or operations (e.g., limiting the ability to create indexes).
+
+3. **Enabling Access Control**
+- After creating user accounts, restart the MongoDB server and edit the configuration file to enable **authorization**.
+- Authentication can be performed during or after connection, specifying the admin database, username, and password.
+
+#### Backups
+
+Backing up your MongoDB databases is essential, and testing restore procedures is just as important. MongoDB offers two primary methods for backups: **file copying** and the **mongodump/mongorestore** utilities.
+
+1. **Copying Data Files**
+- This manual method involves copying the MongoDB data files directly.
+- Before copying, use `DB.fsyncLock` to temporarily lock the database to prevent writes, copy the files, and then unlock with `DB.fsyncUnlock`. 
+- Alternatively, you can stop MongoDB, copy the files, and restart the server. 
+- If using a **replica set**, one member can be removed temporarily for backup to minimize downtime.
+- To restore, stop MongoDB, replace the data files with the backup, and restart.
+
+2. **mongodump/mongorestore**
+- **mongodump** creates a backup in a dump folder with subfolders for each database and collection.
+- You can back up specific databases, collections, or even partial documents using queries.
+- **mongorestore** allows you to restore from the dump folder, either for entire databases or specific collections.
+
+In both methods, regular backups and testing the restore process are crucial for maintaining database integrity and disaster recovery.
